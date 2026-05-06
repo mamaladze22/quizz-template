@@ -1,0 +1,519 @@
+<!-- 
+  COPY/PASTE INSTRUCTIONS:
+  1. Go to your WordPress Post/Page.
+  2. Add a "Custom HTML" block.
+  3. Paste this entire code snippet inside.
+  4. Update the 'quizData' variable in the <script> tag to change image URLs.
+  5. Replace the 'src' in the <img> tag with your own image URL.
+-->
+
+<style>
+  /* --- SCOPED CSS START --- */
+  #wp-custom-quiz-wrapper {
+    /* Variables for easy color customization */
+    --quiz-bg: #ffffff;
+    --quiz-text: #333333;
+    --quiz-accent: #2271b1; /* WordPress Blue */
+    --quiz-accent-hover: #135e96;
+    --quiz-success: #46b450;
+    --quiz-error: #dc3232;
+    --quiz-grey-light: #f0f0f1;
+    --quiz-border-radius: 8px;
+    
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    max-width: 650px;
+    margin: 2rem auto;
+    background: var(--quiz-bg);
+    border: 1px solid #ddd;
+    border-radius: var(--quiz-border-radius);
+    padding: 2rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    line-height: 1.6;
+    color: var(--quiz-text);
+    box-sizing: border-box;
+  }
+
+  /* Resetting box sizing for children */
+  #wp-custom-quiz-wrapper *, 
+  #wp-custom-quiz-wrapper *::before, 
+  #wp-custom-quiz-wrapper *::after {
+    box-sizing: border-box;
+  }
+
+  /* Intro, Question & Result Images */
+  #wp-custom-quiz-wrapper .quiz-intro-img,
+  #wp-custom-quiz-wrapper .quiz-question-img,
+  #wp-custom-quiz-wrapper .quiz-result-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0 auto 1.5rem auto;
+    border-radius: var(--quiz-border-radius);
+    object-fit: cover;
+  }
+  
+  #wp-custom-quiz-wrapper .quiz-question-img {
+      max-height: 400px; /* Prevent it from being too tall */
+      background-color: var(--quiz-grey-light); /* Placeholder bg */
+  }
+
+  /* --- NEW: Result Image Wrapper & Copyright --- */
+  #wp-custom-quiz-wrapper .result-img-wrapper {
+    position: relative;
+    margin: 0 auto 1.5rem auto;
+    border-radius: var(--quiz-border-radius);
+    overflow: hidden; /* Ensures copyright doesn't spill out */
+  }
+
+  /* Remove margin from the image itself when inside wrapper */
+  #wp-custom-quiz-wrapper .result-img-wrapper .quiz-result-img {
+    margin-bottom: 0; 
+    border-radius: 0;
+    object-fit: contain;
+  }
+
+  #wp-custom-quiz-wrapper .copyright-text {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    font-size: 11px; /* Tiny text */
+    color: #ffffff;
+    background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent black background */
+    padding: 2px 6px;
+    border-radius: 4px;
+    pointer-events: none; /* Allows clicks to pass through if needed */
+    display: none; /* Hidden by default */
+    z-index: 10;
+  }
+
+  /* Typography */
+  #wp-custom-quiz-wrapper h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    color: #1d2327;
+    text-align: center;
+  }
+
+  #wp-custom-quiz-wrapper p {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Specific Typography for Results Page (Bigger) */
+  #wp-custom-quiz-wrapper #result-title {
+    font-size: 2.2rem; /* Significantly bigger */
+    margin-bottom: 1rem;
+    font-weight: 700;
+  }
+
+  #wp-custom-quiz-wrapper #result-message {
+    font-size: 1.35rem; /* Bigger than standard text */
+    line-height: 1.5;
+  }
+
+  /* Progress Bar */
+  #wp-custom-quiz-wrapper .quiz-progress-container {
+    width: 100%;
+    background-color: var(--quiz-grey-light);
+    border-radius: 99px;
+    height: 8px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+  }
+
+  #wp-custom-quiz-wrapper .quiz-progress-bar {
+    height: 100%;
+    background-color: var(--quiz-accent);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  /* Options Buttons */
+  #wp-custom-quiz-wrapper .quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  #wp-custom-quiz-wrapper button.quiz-option-btn {
+    background: #fff;
+    color: var(--quiz-text);
+    border: 2px solid var(--quiz-grey-light);
+    padding: 12px 16px;
+    border-radius: var(--quiz-border-radius);
+    cursor: pointer;
+    text-align: left;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    width: 100%;
+    /* Override generic WP theme button styles */
+    text-decoration: none;
+    box-shadow: none;
+    font-weight: normal;
+  }
+
+  #wp-custom-quiz-wrapper button.quiz-option-btn:hover:not(:disabled) {
+    border-color: var(--quiz-accent);
+    background-color: #f6f7f7;
+  }
+
+  /* State: Correct/Incorrect */
+  #wp-custom-quiz-wrapper button.quiz-option-btn.correct {
+    background-color: #edfaef;
+    border-color: var(--quiz-success);
+    color: #1e5c22;
+    font-weight: 600;
+  }
+
+  #wp-custom-quiz-wrapper button.quiz-option-btn.incorrect {
+    background-color: #fbeaea;
+    border-color: var(--quiz-error);
+    color: #781818;
+    opacity: 0.8;
+  }
+
+  /* Controls (Next / Restart / Link) */
+  #wp-custom-quiz-wrapper .quiz-controls {
+    margin-top: 1.5rem;
+    text-align: right;
+    min-height: 50px; /* Prevent layout jump */
+  }
+
+  /* Unified Button Style for <button> and <a> */
+  #wp-custom-quiz-wrapper .quiz-action-btn {
+    background-color: var(--quiz-accent);
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
+    display: inline-block;
+    text-decoration: none; /* For link buttons */
+    text-align: center;
+  }
+
+  #wp-custom-quiz-wrapper .quiz-action-btn:hover {
+    background-color: var(--quiz-accent-hover);
+    color: white; /* Ensure link text stays white */
+  }
+  
+  /* Make Start Button Bigger */
+  #wp-custom-quiz-wrapper #start-btn {
+      padding: 16px 40px;
+      font-size: 1.25rem;
+  }
+
+  /* Results Screen */
+  #wp-custom-quiz-wrapper .quiz-results-content {
+    text-align: center;
+    padding: 1rem 0;
+  }
+  
+  #wp-custom-quiz-wrapper .score-circle {
+    width: 100px;
+    height: 100px;
+    background: var(--quiz-accent);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0 auto 1.5rem auto;
+  }
+
+  /* Utility to hide elements */
+  .quiz-hidden {
+    display: none !important;
+  }
+
+  /* Mobile Tweaks */
+  @media (max-width: 480px) {
+    #wp-custom-quiz-wrapper {
+      padding: 1.5rem 1rem;
+      margin: 1rem 0;
+      border: none;
+    }
+  }
+</style>
+
+<div id="wp-custom-quiz-wrapper">
+  
+  <!-- Screen 1: Intro -->
+  <div id="quiz-intro">
+    <div style="text-align: center;">
+      <button id="start-btn" class="quiz-action-btn">[START_BUTTON_TEXT]</button>
+    </div>
+  </div>
+
+  <!-- Screen 2: Game -->
+  <div id="quiz-game" class="quiz-hidden">
+    <!-- Progress Bar -->
+    <div class="quiz-progress-container">
+      <div id="progress-bar" class="quiz-progress-bar"></div>
+    </div>
+
+    <!-- Question Image (Replaces Text) -->
+    <img id="question-image" src="" alt="Question" class="quiz-question-img" />
+
+    <!-- Question Text -->
+    <h2 id="question-text" style="text-align:center; margin-bottom: 1rem;">[QUESTION_HEADING]</h2>
+
+    <!-- Options Container -->
+    <div id="options-container" class="quiz-options">
+      <!-- Buttons generated via JS -->
+    </div>
+
+    <!-- Feedback / Next Button -->
+    <div class="quiz-controls">
+      <button id="next-btn" class="quiz-action-btn quiz-hidden">Next Question</button>
+    </div>
+  </div>
+
+  <!-- Screen 3: Results -->
+  <div id="quiz-results" class="quiz-hidden">
+    <div class="quiz-results-content">
+      <!-- Result Image Wrapper with Copyright -->
+      <div class="result-img-wrapper">
+        <img id="result-image" src="" alt="Result" class="quiz-result-img" />
+        <div id="result-copyright" class="copyright-text"></div>
+      </div>
+      
+      <div class="score-circle">
+        <span id="final-score">0</span>
+      </div>
+      <h2 id="result-title">Quiz Completed!</h2>
+      <p id="result-message">You answered X out of Y correctly.</p>
+      
+      <!-- Replaced Restart Button with Product Link -->
+      <a href="[CTA_LINK_URL]" target="_blank" class="quiz-action-btn">[CTA_LINK_TEXT]</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  /**
+   * ------------------------------------------------------------------
+   * CONFIGURATION: EDIT YOUR QUESTIONS HERE
+   * ------------------------------------------------------------------
+   * 'image': URL of the image that acts as the question.
+   * 'options': array of possible answers.
+   * 'correct': index of the correct answer (0 = first option, 1 = second, etc.)
+   */
+  const quizData = [
+    {
+      image: "[Q1_IMAGE_URL]",
+      alt: "[Q1_ALT_TEXT]",
+      options: ["[Q1_OPTION_1]", "[Q1_OPTION_2]", "[Q1_OPTION_3]"],
+      correct: 0  // 0 = first option, 1 = second, 2 = third
+    },
+    {
+      image: "[Q2_IMAGE_URL]",
+      alt: "[Q2_ALT_TEXT]",
+      options: ["[Q2_OPTION_1]", "[Q2_OPTION_2]", "[Q2_OPTION_3]"],
+      correct: 0
+    },
+    {
+      image: "[Q3_IMAGE_URL]",
+      alt: "[Q3_ALT_TEXT]",
+      options: ["[Q3_OPTION_1]", "[Q3_OPTION_2]", "[Q3_OPTION_3]"],
+      correct: 0
+    },
+    {
+      image: "[Q4_IMAGE_URL]",
+      alt: "[Q4_ALT_TEXT]",
+      options: ["[Q4_OPTION_1]", "[Q4_OPTION_2]", "[Q4_OPTION_3]"],
+      correct: 0
+    },
+    {
+      image: "[Q5_IMAGE_URL]",
+      alt: "[Q5_ALT_TEXT]",
+      options: ["[Q5_OPTION_1]", "[Q5_OPTION_2]", "[Q5_OPTION_3]"],
+      correct: 0
+    },
+    {
+      image: "[Q6_IMAGE_URL]",
+      alt: "[Q6_ALT_TEXT]",
+      options: ["[Q6_OPTION_1]", "[Q6_OPTION_2]", "[Q6_OPTION_3]"],
+      correct: 0
+    },
+    {
+      image: "[Q7_IMAGE_URL]",
+      alt: "[Q7_ALT_TEXT]",
+      options: ["[Q7_OPTION_1]", "[Q7_OPTION_2]", "[Q7_OPTION_3]"],
+      correct: 0
+    },
+    {
+      image: "[Q8_IMAGE_URL]",
+      alt: "[Q8_ALT_TEXT]",
+      options: ["[Q8_OPTION_1]", "[Q8_OPTION_2]", "[Q8_OPTION_3]"],
+      correct: 0
+    },
+    {
+      image: "[Q9_IMAGE_URL]",
+      alt: "[Q9_ALT_TEXT]",
+      options: ["[Q9_OPTION_1]", "[Q9_OPTION_2]", "[Q9_OPTION_3]"],
+      correct: 0
+    },
+    {
+      image: "[Q10_IMAGE_URL]",
+      alt: "[Q10_ALT_TEXT]",
+      options: ["[Q10_OPTION_1]", "[Q10_OPTION_2]", "[Q10_OPTION_3]"],
+      correct: 0
+    }
+  ];
+
+  /**
+   * ------------------------------------------------------------------
+   * APP LOGIC
+   * ------------------------------------------------------------------
+   */
+  let currentQuestionIndex = 0;
+  let score = 0;
+
+  // DOM Elements
+  const wrapper = document.getElementById('wp-custom-quiz-wrapper');
+  const introScreen = wrapper.querySelector('#quiz-intro');
+  const gameScreen = wrapper.querySelector('#quiz-game');
+  const resultsScreen = wrapper.querySelector('#quiz-results');
+  
+  const questionImg = wrapper.querySelector('#question-image'); 
+  const optionsEl = wrapper.querySelector('#options-container');
+  const nextBtn = wrapper.querySelector('#next-btn');
+  const progressBar = wrapper.querySelector('#progress-bar');
+  
+  const finalScoreEl = wrapper.querySelector('#final-score');
+  const resultMsgEl = wrapper.querySelector('#result-message');
+  const resultTitleEl = wrapper.querySelector('#result-title');
+  const resultImgEl = wrapper.querySelector('#result-image');
+  const resultCopyrightEl = wrapper.querySelector('#result-copyright'); // New Element
+
+  // Event Listeners
+  wrapper.querySelector('#start-btn').addEventListener('click', startQuiz);
+  // Removed restart button listener as the button is now a link
+  
+  nextBtn.addEventListener('click', () => {
+    currentQuestionIndex++;
+    loadQuestion();
+  });
+
+  function startQuiz() {
+    currentQuestionIndex = 0;
+    score = 0;
+    introScreen.classList.add('quiz-hidden');
+    resultsScreen.classList.add('quiz-hidden');
+    gameScreen.classList.remove('quiz-hidden');
+    loadQuestion();
+    
+    // Auto-scroll to wrapper top to make sure question is visible
+    wrapper.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function loadQuestion() {
+    // Check if end of quiz
+    if (currentQuestionIndex >= quizData.length) {
+      showResults();
+      return;
+    }
+
+    // Reset UI
+    const currentData = quizData[currentQuestionIndex];
+    
+    // Set Question Image
+    questionImg.src = currentData.image;
+    questionImg.alt = currentData.alt || "Question";
+
+    optionsEl.innerHTML = '';
+    nextBtn.classList.add('quiz-hidden');
+    
+    // Update Progress
+    const progressPercent = ((currentQuestionIndex) / quizData.length) * 100;
+    progressBar.style.width = `${progressPercent}%`;
+
+    // Create Options
+    currentData.options.forEach((opt, index) => {
+      const btn = document.createElement('button');
+      btn.classList.add('quiz-option-btn');
+      btn.textContent = opt;
+      btn.addEventListener('click', () => selectAnswer(index, currentData.correct, btn));
+      optionsEl.appendChild(btn);
+    });
+  }
+
+  function selectAnswer(selectedIndex, correctIndex, clickedBtn) {
+    const buttons = optionsEl.querySelectorAll('.quiz-option-btn');
+    
+    // Disable all buttons to prevent re-guessing
+    buttons.forEach(btn => btn.disabled = true);
+
+    // Check Logic
+    if (selectedIndex === correctIndex) {
+      score++;
+      clickedBtn.classList.add('correct');
+    } else {
+      clickedBtn.classList.add('incorrect');
+      // Highlight the correct one
+      buttons[correctIndex].classList.add('correct');
+    }
+
+    // Change Next button text if it's the last question
+    if (currentQuestionIndex === quizData.length - 1) {
+      nextBtn.textContent = "[SEE_RESULTS_BUTTON_TEXT]";
+    } else {
+      nextBtn.textContent = "[NEXT_BUTTON_TEXT]";
+    }
+
+    nextBtn.classList.remove('quiz-hidden');
+  }
+
+  function showResults() {
+    gameScreen.classList.add('quiz-hidden');
+    resultsScreen.classList.remove('quiz-hidden');
+    
+    finalScoreEl.textContent = score + "/" + quizData.length;
+
+    // Determine Message and Image based on score
+    let titleText = "";
+    let descriptionText = "";
+    let imageUrl = "";
+
+    if (score >= 1 && score <= 3) {
+        // 1 to 3 Correct
+        titleText = "[RESULT_LOW_TITLE]";
+        descriptionText = "[RESULT_LOW_DESCRIPTION]";
+        imageUrl = "[RESULT_LOW_IMAGE_URL]";
+        resultCopyrightEl.style.display = 'none';
+    } else if (score >= 4 && score <= 6) {
+        // 4 to 6 Correct
+        titleText = "[RESULT_MID_TITLE]";
+        descriptionText = "[RESULT_MID_DESCRIPTION]";
+        imageUrl = "[RESULT_MID_IMAGE_URL]";
+        resultCopyrightEl.style.display = 'none';
+    } else {
+        // 7 to 10 Correct
+        titleText = "[RESULT_HIGH_TITLE]";
+        descriptionText = "[RESULT_HIGH_DESCRIPTION]";
+        imageUrl = "[RESULT_HIGH_IMAGE_URL]";
+        resultCopyrightEl.style.display = 'none';
+    }
+
+    resultTitleEl.textContent = titleText;
+    resultMsgEl.innerHTML = descriptionText; // Changed to innerHTML to support the link
+    
+    // Only show image if URL exists
+    if (imageUrl) {
+        resultImgEl.src = imageUrl;
+        resultImgEl.style.display = 'block';
+    } else {
+        resultImgEl.style.display = 'none';
+    }
+  }
+
+})();
+</script>
