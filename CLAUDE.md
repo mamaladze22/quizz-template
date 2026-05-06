@@ -1,14 +1,24 @@
 # CLAUDE.md
 
-This repository is a **quiz template**. The code here is a working quiz used as a scaffold for new quiz projects. It is **not** a quiz to be edited in place — it is a starting point to be **copied**.
+This repository holds **quiz templates** and quiz instances built from them. Templates are working quizzes used as scaffolds for new projects. They are **not** to be edited when creating a new quiz — they are starting points to be **copied**.
 
 ---
 
-## Critical rule: the template is read-only
+## Available templates
 
-**Never modify the `code template` file when the user asks to create a new quiz.**
+| File | Georgian name | Quiz type |
+|------|--------------|-----------|
+| `templates/gamoicani-wignebi-ydyt` | გამოიცანი წიგნები ყდით | Guess the book by its cover (image → title) |
 
-If a request would result in editing the template directly, stop and ask for confirmation. The only valid reasons to edit the template itself are explicit instructions like:
+New template types may be added to `templates/` as needed. When the user asks to create a quiz, confirm which template to use if more than one exists.
+
+---
+
+## Critical rule: templates are read-only
+
+**Never modify any file inside `templates/` when the user asks to create a new quiz.**
+
+If a request would result in editing a template directly, stop and ask for confirmation. The only valid reasons to edit a template are explicit instructions like:
 
 - "update the template"
 - "fix a bug in the template"
@@ -21,12 +31,13 @@ For everything else — especially anything that sounds like "make a quiz about 
 ## Repository layout
 
 ```
-/code template      ← the master template file (read-only by default)
-/quizzes/           ← new quiz instances, one file each
-  <quiz-name>       ← a copy of `code template` with placeholders filled in
+/templates/                        ← read-only template files
+  gamoicani-wignebi-ydyt           ← "guess the book by cover" template
+/quizzes/                          ← quiz instances, one file each
+  <quiz-name>                      ← a copy of a template with placeholders filled in
 ```
 
-The template is a single self-contained HTML/CSS/JS file designed to be pasted into a WordPress Custom HTML block. New quizzes are individual files in `/quizzes/`, not subdirectories.
+Each template is a single self-contained HTML/CSS/JS file designed to be pasted into a WordPress Custom HTML block. New quizzes are individual files in `/quizzes/`, not subdirectories.
 
 ---
 
@@ -34,12 +45,13 @@ The template is a single self-contained HTML/CSS/JS file designed to be pasted i
 
 When the user requests a new quiz:
 
-1. **Confirm the quiz name.** Used as the file name. kebab-case. e.g. `world-capitals`, `georgian-literature-1`.
-2. **Copy `code template`** to `/quizzes/<quiz-name>`. Use `cp "code template" "quizzes/<quiz-name>"`.
-3. **Modify only the copy.** Fill in every placeholder listed in "Placeholder reference" below.
-4. **Verify** the content is complete and correct before finishing.
+1. **Confirm the quiz name.** Used as the file name. kebab-case ASCII. e.g. `world-capitals`, `georgian-literature-1`.
+2. **Identify the template.** Default to `templates/gamoicani-wignebi-ydyt` unless the user specifies another.
+3. **Copy the template** to `/quizzes/<quiz-name>`. Use `cp "templates/<template-name>" "quizzes/<quiz-name>"`.
+4. **Modify only the copy.** Fill in every placeholder listed in "Placeholder reference" below.
+5. **Verify** the content is complete and correct before finishing.
 
-Never skip step 2. Never edit `code template` to "save a step".
+Never skip step 3. Never edit a template file to "save a step".
 
 ---
 
@@ -62,9 +74,11 @@ Every `[PLACEHOLDER]` in the template must be replaced when creating a new quiz.
 - `correct` field — integer index of the correct option: `0` = first, `1` = second, `2` = third
 
 **Result tiers**
-- `[RESULT_LOW_TITLE]` / `[RESULT_LOW_DESCRIPTION]` / `[RESULT_LOW_IMAGE_URL]` — score 1–3
+- `[RESULT_LOW_TITLE]` / `[RESULT_LOW_DESCRIPTION]` / `[RESULT_LOW_IMAGE_URL]` — score 0–3
 - `[RESULT_MID_TITLE]` / `[RESULT_MID_DESCRIPTION]` / `[RESULT_MID_IMAGE_URL]` — score 4–6
 - `[RESULT_HIGH_TITLE]` / `[RESULT_HIGH_DESCRIPTION]` / `[RESULT_HIGH_IMAGE_URL]` — score 7–10
+
+---
 
 ## What to replace (content)
 
@@ -91,7 +105,7 @@ If the user wants a structural change for one quiz only, that's a signal to ask 
 
 ---
 
-## Cleaning the template
+## Cleaning a template
 
 If the user asks to "clean up the template" or "strip the template":
 
@@ -113,9 +127,9 @@ If the user asks to "clean up the template" or "strip the template":
 
 ## Naming conventions
 
-- Quiz directory: kebab-case ASCII (`georgian-history-quiz`, not `ქართული-ისტორია`).
+- Quiz file: kebab-case ASCII (`georgian-history-quiz`, not `ქართული-ისტორია`).
+- Template file: kebab-case ASCII transliteration of the Georgian template name.
 - Quiz title (displayed): free-form, any language.
-- Files inside a copied quiz keep their original template names — don't rename them.
 
 ---
 
@@ -123,9 +137,9 @@ If the user asks to "clean up the template" or "strip the template":
 
 Before declaring a new quiz done, verify:
 
-- [ ] `code template` is unchanged. (`git status` shows no changes to `code template`.)
-- [ ] `/quizzes/<quiz-name>` exists and is a copy of the template.
-- [ ] Every `[PLACEHOLDER]` has been replaced with real content (grep for `\[` to confirm none remain).
+- [ ] No file inside `templates/` was modified. (`git status` shows no changes there.)
+- [ ] `/quizzes/<quiz-name>` exists and is a copy of the chosen template.
+- [ ] Every `[PLACEHOLDER]` has been replaced with real content (grep for `\[[A-Z_]\+\]` to confirm none remain).
 - [ ] All image URLs are reachable.
 - [ ] The file pastes into WordPress and plays through end-to-end without console errors.
 
@@ -133,4 +147,4 @@ Before declaring a new quiz done, verify:
 
 ## When in doubt, ask
 
-If a request is ambiguous between "make a new quiz" and "edit the template", ask before touching any files. Reverting an edit to the template is more painful than asking one clarifying question.
+If a request is ambiguous between "make a new quiz" and "edit a template", ask before touching any files. Reverting an edit to a template is more painful than asking one clarifying question.
